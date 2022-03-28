@@ -4,6 +4,7 @@
   // config
   require_once '../resources/config.php';
 
+  // redirect to home page if the user is logged in, redirect to login page if not
   if(isSignedIn() == true){
     redirect('/home.php');
   }

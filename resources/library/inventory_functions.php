@@ -1,5 +1,4 @@
 <?php
-  
   function generateColumnNames(){
     echo '<thead>';
       echo '<tr>';
@@ -9,7 +8,7 @@
     echo '</thead>';
   }
 
-  function getTableEntries($manufacturers_array){
+  function generateTableEntries($manufacturers_array){
     global $config;
 
     // get the connection to the db
@@ -58,11 +57,18 @@
 
     // get all the results from the db
     $resultSet = executeSqlQuery($connection, 'SELECT * FROM Products');
+    
+    // we are going to store the array of products in the sesion
+    $productsArray = [];
 
     // place all the products in the select
     foreach ($resultSet as $row) {
       echo "<option value='${row['product_name']}'>${row['product_name']}</option>";
+      $productsArray[$row['auto_id']] = $row['product_name'];
     }
+
+    // set the products array in the session filter object
+    // $_SESSION['session']->get_filterObject()->set_products_array($productsArray);
   }
 
   function getManufacturers(){

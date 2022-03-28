@@ -106,7 +106,6 @@ $config = array(
   require_once CLASSES_PATH . '/flash_class.php';
   require_once CLASSES_PATH . '/filter_class.php';
 
-
   // initialize the session everytime a page is loaded
   initSession();
 ?>

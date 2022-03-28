@@ -15,11 +15,6 @@ if (!isSignedIn()) {
   redirect('/login.php');
 }
 
-// initialize the filter object if it hasn't already
-if(!isset($_SESSION['filterProperties'])){
-  $_SESSION['filterProperties'] = new Filter();
-}
-
 ?>
 
 
@@ -78,7 +73,7 @@ if(!isset($_SESSION['filterProperties'])){
     generateColumnNames();
     
     // table data
-    getTableEntries($manufacturers_array);
+    generateTableEntries($manufacturers_array);
     ?>
   </table>
 

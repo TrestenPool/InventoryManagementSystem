@@ -98,21 +98,24 @@ function isSessionSet(){
 function setFlash($type, $message){
 
   // returns if no session is set
-  if(!isSessionSet()){
-    return;
-  }
+  // if(!isSessionSet()){
+  //   return;
+  // }
 
+  // if any flash messages are already set, remove them
   if(isset($_SESSION['flash'])){
     unset($_SESSION['flash']);
   }
 
+  // setup the new flash message to be called with printFlash()
   $_SESSION['flash'] = new Flash();
   $_SESSION['flash']->set_type($type);
   $_SESSION['flash']->set_message($message);
 }
 
 function printFlash(){
-  if(!isSessionSet() || !isset($_SESSION['flash'])){
+  // return if the flash message is not set
+  if(!isset($_SESSION['flash'])){
     return;
   }
 

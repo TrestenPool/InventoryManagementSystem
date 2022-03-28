@@ -77,7 +77,12 @@ function attemptLogout(){
     return false;
   }
 
-  $_SESSION['session']->set_isSignedIn(false);
+  // set the signed in variable to false
+  // $_SESSION['session']->set_isSignedIn(false);
+
+  // unset the session variable
+  unset($_SESSION['session']);
+
   return true;
 }
 
