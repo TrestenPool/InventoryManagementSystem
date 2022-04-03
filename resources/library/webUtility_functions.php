@@ -15,6 +15,23 @@ function getRequestBody(){
   return json_decode(file_get_contents('php://input'), true);
 }
 
+// pass an array of query paramters to the function
+// returns an array of the results, null will be the result of the index if it not defined
+function getQueryParameters($paramArray){
+  $resultArray = [];
+
+  foreach($paramArray as $param){
+    if(isset($_GET[$param])){
+      $resultArray[$param] = $_GET[$param];
+    }
+    else{
+      $resultArray[$param] = null;
+    }
+  }
+
+  return $resultArray;
+}
+
 function redirect($url){
   global $config;
   header("Location: " .$config["urls"]["baseUrl"] . $url);

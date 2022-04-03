@@ -3,6 +3,7 @@
 require_once('/var/www/vendor/autoload.php');
 $dotenv = Dotenv\Dotenv::createMutable(__DIR__);
 $dotenv->load();
+
 /*
     Creating constants for heavily used paths makes things a lot easier.
     ex. require_once(LIBRARY_PATH . "Paginator.php")
@@ -10,6 +11,7 @@ $dotenv->load();
 define("LIBRARY_PATH", realpath(dirname(__FILE__) . '/library'));
 define("TEMPLATES_PATH", realpath(dirname(__FILE__) . '/templates'));
 define("CLASSES_PATH", realpath(dirname(__FILE__) . '/classes'));
+define("VENDOR_PATH", '/var/www/vendor');
 
 // used for the vendor for 
 define('DIR_VENDOR', '/var/www/vendor/');
@@ -75,7 +77,7 @@ $config = array(
     ),
 
     "pagination" => array(
-      "entries" => 10
+      "entries" => 50
     ),
 
     "Hashing_Algorithm" => PASSWORD_BCRYPT,
@@ -106,6 +108,12 @@ $config = array(
   require_once CLASSES_PATH . '/flash_class.php';
   require_once CLASSES_PATH . '/filter_class.php';
 
+  // pageination library
+  require_once VENDOR_PATH . '/stefangabos/zebra_pagination/Zebra_Pagination.php';
+
   // initialize the session everytime a page is loaded
   initSession();
+
+//   echo 'product ' . getFilterObject()->get_productID_selected() . "\n";
+//   echo 'manufacturer ' . getFilterObject()->get_manufacturerID_selected();
 ?>

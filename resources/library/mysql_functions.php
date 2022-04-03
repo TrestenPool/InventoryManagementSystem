@@ -31,4 +31,31 @@ function executeSqlQuery($connection, $sql){
   // }
 }
 
+// Input: mysql connection, sql prepared statment string and parametersArray
+// parametersArray is just an array of strings
+// NOTE: only works when all the elements in the $parametersArray are strings
+function executePreparedStatement($connection, $sql_prepared, $parametersArray){
+
+  // setting up the bindParams
+  $bindParams = null;
+  foreach($parametersArray as $param){
+    if($bindParams == null){
+      $bindParams = '';
+    }
+    $bindParams .= 's';
+  }
+
+  if($stmt = $connection->prepare($sql_prepared)){
+    $stmt->bind_param($bindParams, ...$parametersArray);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result;
+  }
+  else{
+    writeToError('Received error code ' . mysqli_errno($connection) . ' in executePreparedStatement()');
+    return null;
+  }
+
+}
+
 ?>

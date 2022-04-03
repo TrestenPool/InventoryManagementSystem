@@ -1,94 +1,83 @@
 <?php
-// config
-require_once '../resources/config.php';
+  // config
+  require_once '../resources/config.php';
 
-// header information
-$cssArray = array();
-generateHeader($cssArray, 'Home');
+  // header information
+  $cssArray = array(
+    $config['paths']['css'] . '/zebra_pagination.css'
+  );
+  generateHeader($cssArray, 'Home');
 
-// print out any flash messages after redirect if necessary
-printFlash();
+  // print out any flash messages after redirect if necessary
+  printFlash();
 
-// redirect to the login page if the user is not logged in
-if (!isSignedIn()) {
-  setFlash(FLASH_WARNING, 'Must be signed in, in order to access Home page');
-  redirect('/login.php');
-}
-
+  // redirect to the login page if the user is not logged in
+  if (!isSignedIn()) {
+    setFlash(FLASH_WARNING, 'Must be signed in, in order to access Home page');
+    redirect('/login.php');
+  }
 ?>
-
-
-
-<h1>Home page</h1>
 
 <!-- Main container -->
 <div class="container-lg">
 
-  <!-- Filter and search top row -->
-  <div class="row">
-    <!-- Products Filter -->
-    <div class="col-3">
-      <form action="/home.php" method="get">
-        <select class="form-select" aria-label="Default select example" name="productType">
-          <option value="" disabled selected>Product</option>
+  <h1>Home page</h1>
+
+  <!-- FILTERS AND SERIAL NUMBER SEARCH -->
+  <form action="/home.php" method="GET">
+    <div class="row">
+
+      <div class="col-3">
+        <!-- Products filter -->
+        <select class="form-select" name="productType">
+          <option value="-1">All Products</option>
           <?php
-            $productsArray = getProductTypes();
+          getProductTypes();
           ?>
         </select>
-        <button type="submit" class="btn btn-sm btn-primary">Submit</button>
-      </form>
-    </div>
+      </div>
 
-    <!-- Manufacturer Filter -->
-    <div class="col-3">
-      <form action="/home.php" method="get">
-        <select class="form-select" aria-label="Default select example" name="manufacturerName">
-          <option value="" disabled selected>Manufacturer</option>
+      <div class="col-3">
+        <!-- Manufacturer Filter -->
+        <select class="form-select" name="manufacturerName">
+          <option value="-1">All Manufacturers</option>
           <?php
-
+          getManufacturers();
           ?>
         </select>
-        <button type="submit" class="btn btn-sm btn-primary">Submit</button>
-      </form>
+      </div>
+
+      <!-- Empty portion -->
+      <div class="col-3">
+      </div>
+
+      <!-- Serial Number search -->
+      <div class="col-3">
+        Serial Number search
+      </div>
+
     </div>
 
-    <!-- Empty portion -->
-    <div class="col-3">
-    </div>
-
-    <!-- Serial Number search -->
-    <div class="col-3">
-      Serial Number search
-    </div>
-
-  </div>
+    <!-- Submit button -->
+    <button type="submit" class="btn btn-sm btn-primary">Submit</button>
+  </form>
 
   <!-- Table -->
-  <table class="table table-striped">
     <?php
-    // get all the manufacturers
-    $manufacturers_array = getManufacturers();
-
     // columns
     generateColumnNames();
-    
+
     // table data
-    generateTableEntries($manufacturers_array);
+    generateTableEntries();
     ?>
-  </table>
-
-
-
 </div>
-
-
 
 
 <?php
 global $config;
-
 $jsArray = array(
-  //   $config['paths']['js'] . '/home.js'
+  $config['paths']['js'] . '/jquery-3.6.0.min.js',
+  $config['paths']['js'] . '/zebra_pagination.js'
 );
 generateFooter($jsArray);
 ?>

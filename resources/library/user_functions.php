@@ -19,7 +19,6 @@ function isSignedIn(){
   }
 
   return false;
-
 }
 
 // connection to a db has been passed with $conn
@@ -76,9 +75,6 @@ function attemptLogout(){
   if(!isSignedIn()){
     return false;
   }
-
-  // set the signed in variable to false
-  // $_SESSION['session']->set_isSignedIn(false);
 
   // unset the session variable
   unset($_SESSION['session']);

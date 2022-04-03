@@ -4,12 +4,7 @@ class Session{
   var $username = null;
   var $isSignedIn = false;
 
-  // filter object that the current session is using
-  var $filterObject = null;
-
   function __construct(){
-    // initializes the filter object
-    $this->filterObjectj = new Filter();
   }
 
   // setters
@@ -19,9 +14,6 @@ class Session{
   public function set_isSignedIn($value){
     $this->isSignedIn = $value;
   }
-  public function set_filterObject($value){
-    $this->filterObject = $value;
-  }
 
   // getters
   public function get_username(){
@@ -29,9 +21,6 @@ class Session{
   }
   public function get_isSignedIn(){
     return $this->isSignedIn;
-  }
-  public function get_filterObject(){
-    return $this->filterObject;
   }
 
 }
