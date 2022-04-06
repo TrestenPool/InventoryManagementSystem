@@ -84,14 +84,6 @@ $config = array(
 );
  
 
-
-/*
-    Error reporting.
-*/
-// error_reporting(E_ALL);
-// ini_set('display_errors', 1);
-
-
 /****************************************************************************************/
 /****************************************************************************************/
 /****** THE FOLLOWING PHP WILL BE RENDERED ON ALL PHP FILES THAT INCLUDE THE CONFIG ****/
@@ -106,7 +98,7 @@ $config = array(
   // classes
   require_once CLASSES_PATH . '/session_class.php';
   require_once CLASSES_PATH . '/flash_class.php';
-  require_once CLASSES_PATH . '/filter_class.php';
+  require_once CLASSES_PATH . '/product_class.php';
 
   // pageination library
   require_once VENDOR_PATH . '/stefangabos/zebra_pagination/Zebra_Pagination.php';
@@ -114,6 +106,11 @@ $config = array(
   // initialize the session everytime a page is loaded
   initSession();
 
-//   echo 'product ' . getFilterObject()->get_productID_selected() . "\n";
-//   echo 'manufacturer ' . getFilterObject()->get_manufacturerID_selected();
+//   $test = array(
+//       '0' => 'zero',
+//       '1' => 'one',
+//       '2' => 'two',
+//       '3' => 'three me please'
+//   );
+
 ?>

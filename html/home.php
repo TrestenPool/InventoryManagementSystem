@@ -16,6 +16,9 @@
     setFlash(FLASH_WARNING, 'Must be signed in, in order to access Home page');
     redirect('/login.php');
   }
+
+  $productsArray = getProductsArray();
+  $manufacturersArray = getManufacturersArray();
 ?>
 
 <!-- Main container -->
@@ -30,9 +33,8 @@
       <div class="col-3">
         <!-- Products filter -->
         <select class="form-select" name="productType">
-          <option value="-1">All Products</option>
           <?php
-          getProductTypes();
+            displayProductsFilter($productsArray, null);
           ?>
         </select>
       </div>
@@ -40,21 +42,32 @@
       <div class="col-3">
         <!-- Manufacturer Filter -->
         <select class="form-select" name="manufacturerName">
-          <option value="-1">All Manufacturers</option>
           <?php
-          getManufacturers();
+            displayManufacturersFilter($manufacturersArray, null);
           ?>
         </select>
       </div>
 
-      <!-- Empty portion -->
+      <!-- Active search -->
       <div class="col-3">
+        <!-- active/inactive selectino -->
+        <select class="form-select" name="activeSelect">
+          <?php
+          displayActiveSelection(null);
+          ?>
+        </select>
       </div>
 
       <!-- Serial Number search -->
       <div class="col-3">
-        Serial Number search
+        <div class="input-group mb-3">
+          <span class="input-group-text">Serial number</span>
+          <?php
+            displaySerialNumber(null);
+          ?>
+        </div>
       </div>
+
 
     </div>
 
@@ -68,7 +81,7 @@
     generateColumnNames();
 
     // table data
-    generateTableEntries();
+    generateTableEntries($productsArray, $manufacturersArray);
     ?>
 </div>
 
