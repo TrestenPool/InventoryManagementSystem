@@ -223,8 +223,6 @@
     $active_selection = getActiveSelectionFromFilter(); // gets the active flag filter
 
 
-
-
     // if either of the filters is not set, return
     if($table_name === null || $manufacturer_id === null || $active_selection === null){
       return;
@@ -237,11 +235,11 @@
     if($serial_number === null){
       // gets all the information and makes a query based on it
       $sql_prepared = 'SELECT manufacturer_id, serialNumber, Active FROM ' . $table_name . ' WHERE manufacturer_id = ? AND Active = ? LIMIT ' . (($pagination->get_page() - 1) * $recordsPerPage) . ', ' . $recordsPerPage . '' ;
-      $resultSet = executePreparedStatement($connection, $sql_prepared, array($manufacturer_id, $active_selection));
+      $resultSet = executePreparedStatement($connection, $sql_prepared, array($manufacturer_id, $active_selection))[0];
 
       // gets the number of records from the table
       $sql2 = 'SELECT COUNT(*) as num_records FROM ' . $table_name . ' WHERE manufacturer_id = ? AND Active = ?';
-      $result2 = executePreparedStatement($connection, $sql2, array($manufacturer_id, $active_selection));
+      $result2 = executePreparedStatement($connection, $sql2, array($manufacturer_id, $active_selection))[0];
 
       // pass the total number of records to the pagination class
       $pagination->records($result2->fetch_assoc()['num_records']);
@@ -252,11 +250,11 @@
     else{
       // gets all the information and makes a query based on it
       $sql_prepared = 'SELECT manufacturer_id, serialNumber, Active FROM ' . $table_name . ' WHERE manufacturer_id = ? AND serialNumber = ? AND Active = ? LIMIT ' . (($pagination->get_page() - 1) * $recordsPerPage) . ', ' . $recordsPerPage . '' ;
-      $resultSet = executePreparedStatement($connection, $sql_prepared, array($manufacturer_id, $serial_number, $active_selection));
+      $resultSet = executePreparedStatement($connection, $sql_prepared, array($manufacturer_id, $serial_number, $active_selection))[0];
 
       // gets the number of records from the table
       $sql2 = 'SELECT COUNT(*) as num_records FROM ' . $table_name . ' WHERE manufacturer_id = ? AND serialNumber = ? AND Active = ?';
-      $result2 = executePreparedStatement($connection, $sql2, array($manufacturer_id, $serial_number, $active_selection));
+      $result2 = executePreparedStatement($connection, $sql2, array($manufacturer_id, $serial_number, $active_selection))[0];
 
       // pass the total number of records to the pagination class
       $pagination->records($result2->fetch_assoc()['num_records']);
@@ -273,7 +271,7 @@
       echo sprintf("<td>%s</td>", ($row['Active']) ?'active' : 'inactive');
 
       // Delete button
-      $deleteLink = $config['urls']['baseUrl'] . '/edit.php' . '?tableName=' . $table_name . '&serialNumber=' . $row['serialNumber'];
+      $deleteLink = $config['urls']['baseUrl'] . '/delete.php' . '?product_name=' . $product_selected . '&serial_number=' . $row['serialNumber'] . '&manufacturer_name=' .$manufacturer_name;
       echo sprintf('<td><a href="%s" style="color:red; margin: 5px"><svg xmlns="http://www.w3.org/2000/svg" width="25px" height="25px" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
         <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
         <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
@@ -397,5 +395,116 @@
     // update the product in the db
     $_SESSION['product']->update($product_id, $manufacturer_id, $serial_number, $active_flag);
   }
+
+  /*******************************************************************************/
+  /*************************** NEW PRODUCT FUNCTIONS  ****************************/
+  /*******************************************************************************/
+  /* ADD NEW PRODUCT
+  * Takes the new product passed in through the request body 
+  * 
+  */
+  function addProduct($products_array, $manufacturers_array){
+    global $config;
+
+    // gets the request body
+    if( !isset($_POST['productType']) || !isset($_POST['manufacturerName']) || !isset($_POST['serialNumber']) ){
+      setFlash(FLASH_DANGER, 'You did not provide all the necessary input to add a new file!!');
+      redirect('/new.php');
+    }
+
+    $productName = $_POST['productType'];
+    $manufacturerName = $_POST['manufacturerName'];
+    $serialNumber = $_POST['serialNumber'];
+
+    if(isset($_POST['active_flag'])){
+      if(strcmp($_POST['active_flag'], 'on') !== 0){
+        setFlash(FLASH_DANGER, 'The active flag was passed but with the wrong value');
+        redirect('/new.php');
+      } 
+      
+      $active_flag = '1';
+    }
+    else{
+      $active_flag = '0';
+    }
+
+    // checks to see if the serial number is correct
+    if(!Product::isValid_serialNumber($serialNumber)){
+      setFlash(FLASH_DANGER, 'The serial number must be exactly 32 characters in length. All numbers and lowercase letters');
+      redirect('/new.php');
+    }
+
+    $product_id = Product::convert_productName_to_productId($productName, $products_array);
+
+    // the product id is not valid
+    if($product_id === null){
+      setFlash(FLASH_DANGER, 'The product ID provided is not valid');
+      redirect('/new.php');
+    }
+
+    $manufacturer_id = product::convert_manufacturerName_to_id($manufacturerName, $manufacturers_array);
+
+    // manufacturer id is not valid
+    if($manufacturer_id === null){
+      setFlash(FLASH_DANGER, 'The manufacturer id provided is not valid');
+      redirect('/new.php');
+    }
+
+    /********************************************************************/
+    $target_dir = "/tmp/website/";
+    $target_file = $target_dir . basename($_FILES["fileToUpload"]["name"]);
+    $uploadOk = 1;
+    $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
+
+    // Check if file already exists
+    if (file_exists($target_file)) {
+      writeToError('FAILED UPLOAD:: file already exists');
+      $uploadOk = 0;
+    }
+
+    // Check file size
+    if ($_FILES["fileToUpload"]["size"] > 500000) {
+      writeToError('FAILED UPLOAD:: file to large');
+      $uploadOk = 0;
+    }
+
+    // Allow certain file formats
+    if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg" && $imageFileType != "gif" && $imageFileType != ".pdf" ) {
+      writeToError('FAILED UPLOAD:: Only the following formats are allowed (JPG, JPEG, PNG, GIF, PDF)');
+      $uploadOk = 0;
+    }
+
+    //uploaded file success
+    if (move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $target_file)) {
+      echo "The file ". htmlspecialchars( basename( $_FILES["fileToUpload"]["name"])). " has been uploaded.";
+    } 
+    // error uploading the file
+    else {
+      echo "Sorry, there was an error uploading your file.";
+    }
+    /********************************************************************/
+    exit;
+
+    // // create the product
+    // $newProduct = new Product($product_id, $manufacturer_id, $serialNumber, $active_flag);
+    // $newProduct->set_products_array($products_array);
+    // $newProduct->set_manufacturers_array($manufacturers_array);
+
+    // // attempt to save in the db
+    // if( $newProduct->create() ){
+    //   // the item was added successfully
+    //   setFlash(FLASH_SUCCESS, 'The product was added into the inventory system successfully');
+    //   redirect('/home.php');
+    // }
+
+    // // there was an issue saving into the db
+    // setFlash(FLASH_DANGER, 'There was an issue inserting the product into the database');
+    // redirect('/new.php');
+  }
+  
+
+  /*******************************************************************************/
+  /*************************** NEW PRODUCT TYPE FUNCTIONS  ****************************/
+  /*******************************************************************************/
 
 ?>

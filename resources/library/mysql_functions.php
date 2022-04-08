@@ -49,7 +49,9 @@ function executePreparedStatement($connection, $sql_prepared, $parametersArray){
     $stmt->bind_param($bindParams, ...$parametersArray);
     $stmt->execute();
     $result = $stmt->get_result();
-    return $result;
+
+    // returns the resultset and the stmt object
+    return array($result, $stmt);
   }
   else{
     writeToError('Received error code ' . mysqli_errno($connection) . ' in executePreparedStatement()');

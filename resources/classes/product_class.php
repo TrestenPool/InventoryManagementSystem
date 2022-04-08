@@ -70,7 +70,21 @@
     * creates the product and inserts into the db
     */
     public function create(){
+      global $config;
+      $conn = connectToDB($config['db']['db1']);
 
+      $product_name = Product::convert_productID_to_productName($this->get_product_id(), $this->get_products_array());
+      $table_name = Product::convert_productName_to_tableName($product_name);
+
+      $sql_prepared = "INSERT INTO " . $table_name . " (manufacturer_id, serialNumber, Active) VALUES (?, ?, ?)";
+      $resultArray = executePreparedStatement($conn, $sql_prepared, array($this->get_manufacturer_id(), $this->get_serial_number(), $this->get_active_flag()));
+      $num_rows_inserted = $resultArray[1]->affected_rows;
+
+      if($num_rows_inserted == 1){
+        return true;
+      }
+
+      return false;
     }
 
     /* UPDATE 
@@ -93,16 +107,16 @@
 
         // first delete the current product from the table
         $sql_prepared = "DELETE FROM " . $old_table_name . " WHERE manufacturer_id = ? AND serialNumber = ?";
-        $deleteResult = executePreparedStatement($conn, $sql_prepared, array($this->get_manufacturer_id(), $this->get_serial_number()));
+        $deleteResult = executePreparedStatement($conn, $sql_prepared, array($this->get_manufacturer_id(), $this->get_serial_number()))[0];
 
         // insert the product into the new table with the new values
         $sql_prepared = "INSERT INTO " . $new_table_name . "(manufacturer_id, serialNumber, Active) VALUES (?,?,?);";
-        $insertResult = executePreparedStatement($conn, $sql_prepared, array($new_manufacturer_id, $new_serial_number, $new_active_flag));
+        $insertResult = executePreparedStatement($conn, $sql_prepared, array($new_manufacturer_id, $new_serial_number, $new_active_flag))[0];
       }
       // this is just going to be an update into the same table
       else{
         $sql_prepared = "UPDATE " . $old_table_name  . " SET manufacturer_id = ?, serialNumber = ?, Active = ? WHERE manufacturer_id = ? AND serialNumber = ?";
-        $updateResult = executePreparedStatement($conn, $sql_prepared, array($new_manufacturer_id, $new_serial_number, $new_active_flag, $this->get_manufacturer_id(), $this->get_serial_number()));
+        $updateResult = executePreparedStatement($conn, $sql_prepared, array($new_manufacturer_id, $new_serial_number, $new_active_flag, $this->get_manufacturer_id(), $this->get_serial_number()))[0];
       }
 
       // set the new values 
@@ -121,6 +135,22 @@
     * deletes the product from the db
     */
     public function delete(){
+      global $config;
+      $conn = connectToDB($config['db']['db1']);
+
+      // gets the table name to delete from
+      $product_name = Product::convert_productID_to_productName($this->get_product_id(), $this->get_products_array());
+      $table_name = Product::convert_productName_to_tableName($product_name);
+
+      $sql_prepared = "DELETE FROM " . $table_name . " WHERE serialNumber = ?";
+      $resultArray = executePreparedStatement( $conn, $sql_prepared, array($this->get_serial_number()));
+      $num_rows_deleted = $resultArray[1]->affected_rows;
+
+      if($num_rows_deleted == 1){
+        return true;
+      }
+
+      return false;
     }
 
     /* GET PRODUCT FROM DB
@@ -134,7 +164,7 @@
 
       // gets the results from the db
       $sql_prepared = "SELECT * from " . $table_name . " WHERE manufacturer_id = ? AND serialNumber = ?";
-      $resultSet = executePreparedStatement($conn, $sql_prepared, array($manufacturer_id, $serial_number));
+      $resultSet = executePreparedStatement($conn, $sql_prepared, array($manufacturer_id, $serial_number))[0];
       
       // product we will be returning
       $product_fetched = null;
@@ -178,6 +208,30 @@
         return false;
       }
 
+    }
+
+    /* IS VALID PRODUCT ID?
+    * returns true if the the product id is valid
+    * returns false otherwise
+    */
+    public static function isValid_product_id($product_id, $products_array){
+      if(isset($products_array[$product_id])){
+        return true;
+      }
+
+      return false;
+    }
+
+    /* IS VALID MANUFACTURER ID?
+    * returns true if the manufacturer id is valid
+    * returns false otherwise
+    */
+    public static function isValid_manufacturer_id($manufacturer_id, $manufacturers_array){
+      if(isset($manufacturers_array[$manufacturer_id])){
+        return true;
+      }
+      
+      return false;
     }
 
     /* 

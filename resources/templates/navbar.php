@@ -14,15 +14,26 @@
 
       <!-- Left side -->
       <ul class="navbar-nav">
+
+        <!-- Home -->
         <li class="nav-item">
           <a class="nav-link active" aria-current="page" href="/home.php">Home</a>
         </li>
+
+        <!-- New product -->
         <li class="nav-item">
-          <a class="nav-link" href="#">Features</a>
+          <a class="nav-link" href="/new.php">Add Product</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Pricing</a>
-        </li>
+
+        <!-- New Product Type -->
+        <!-- <li class="nav-item">
+          <a class="nav-link" href="/newProductType.php">New Product type</a>
+        </li> -->
+
+        <!-- New Manufacturer -->
+        <!-- <li class="nav-item">
+          <a class="nav-link" href="#">New Manufacturer</a>
+        </li> -->
       </ul>
 
       <!-- Right side -->

@@ -8,7 +8,9 @@
   // Loop over them and prevent submission
   Array.prototype.slice.call(forms)
     .forEach(function (form) {
+      // add an event listener on the submit button
       form.addEventListener('submit', function (event) {
+
         if (!form.checkValidity()) {
           event.preventDefault()
           event.stopPropagation()

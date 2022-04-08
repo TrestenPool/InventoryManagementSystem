@@ -90,7 +90,17 @@
     <!-- Submit button -->
     <button type="submit" class="btn btn-primary">Edit</button>
 
+    <!-- Delete button -->
+    <?php
+      $delete_url = sprintf("/delete.php?product_name=%s&serial_number=%s&manufacturer_name=%s", Product::convert_productID_to_productName($currentProduct->get_product_id(), $productsArray), $currentProduct->get_serial_number(), Product::convert_manufacturerId_to_manufacturerName($currentProduct->get_manufacturer_id(), $manufacturersArray));
+      echo sprintf('<a href="%s" class="btn btn-danger btn-md" tabindex="-1" role="button" aria-disabled="true">Delete</a>', $delete_url);
+    ?>
   </form>
+
+  <!-- Back home button -->
+  <div style="margin-top: 20px;">
+    <a href="/home.php" class="btn btn-secondary">Go back home</a>  
+  </div>
 
 </div>
 
