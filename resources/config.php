@@ -106,11 +106,4 @@ $config = array(
   // initialize the session everytime a page is loaded
   initSession();
 
-//   $test = array(
-//       '0' => 'zero',
-//       '1' => 'one',
-//       '2' => 'two',
-//       '3' => 'three me please'
-//   );
-
 ?>

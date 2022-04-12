@@ -3,6 +3,9 @@
     
     private $products_array = null;
     private $manufacturers_array = null;
+
+    
+    private $auto_id; // newly created
     
     private $product_id; // represents the auto_id in the Product table
     private $manufacturer_id; // represents the auto_id in the Manufacturers table
@@ -18,6 +21,9 @@
     }
 
     // setters
+    public function set_auto_id($auto_id){
+      $this->auto_id = $auto_id;
+    }
     public function set_product_id($product_id){
       $this->product_id = $product_id;
     }
@@ -40,6 +46,9 @@
     }
 
     // getters
+    public function get_auto_id(){
+      return $this->auto_id;
+    }
     public function get_product_id(){
       return $this->product_id;
     }
@@ -81,6 +90,7 @@
       $num_rows_inserted = $resultArray[1]->affected_rows;
 
       if($num_rows_inserted == 1){
+        $this->set_auto_id($conn->insert_id);
         return true;
       }
 
@@ -172,6 +182,7 @@
       foreach ($resultSet as $row) {
         $active_flag = $row['Active'];
         $product_fetched = new Product($product_id, $manufacturer_id, $serial_number, $active_flag);
+        $product_fetched->set_auto_id($row['auto_id']);
         return $product_fetched;
       }
 

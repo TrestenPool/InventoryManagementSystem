@@ -40,7 +40,7 @@
 <div class="container">
   <h1>Edit Product</h1>
 
-  <form action="/edit.php" method="post" class="needs-validation" novalidate>
+  <form action="/edit.php" method="post" class="needs-validation" enctype="multipart/form-data" novalidate>
     <!-- choose product -->
     <div class="form-floating">
       <select class="form-select" id="productSelect" name="productType" required>
@@ -74,6 +74,12 @@
       </div>
     </div>
 
+    <!-- Upload file -->
+    <div class="mb-3">
+    <label for="formFileMultiple" class="form-label">Upload file</label>
+    <input class="form-control" type="file" id="formFile" name="fileToUpload">
+    </div>
+
     <!-- Active / Inactive switch -->
     <div class="form-check form-switch">
       <label class="form-check-label" for="flexSwitchCheckChecked">Active</label>
@@ -98,9 +104,36 @@
   </form>
 
   <!-- Back home button -->
-  <div style="margin-top: 20px;">
+  <div style="margin-top: 20px; margin-bottom: 100px">
     <a href="/home.php" class="btn btn-secondary">Go back home</a>  
   </div>
+
+  <h3>Files</h3>
+
+  <?php
+    global $config;
+    $connection = connectToDB($config['db']['db1']);
+    
+    // gets all the auto_ids for the files that belong to this product in the Files table
+    $sql_prepared = "SELECT file_id FROM Product_files WHERE product_id = ? AND product_auto_id = ?";
+    $resultSet = executePreparedStatement($connection, $sql_prepared, array($currentProduct->get_product_id(), $currentProduct->get_auto_id()))[0];
+
+    $array_of_file_ids = array();
+    foreach ($resultSet as $row) {
+      $array_of_file_ids[] = $row['file_id'];
+    }
+
+    foreach ($array_of_file_ids as $file_id) {
+      $sql = "SELECT file_name, generated_file_name FROM Files WHERE auto_id = " . $file_id;
+      $resultSet2 = executeSqlQuery($connection, $sql);
+
+      foreach ($resultSet2 as $row) {
+        $button_link = "/files/" . $row['generated_file_name'];
+        $original_file_name = $row['file_name'];
+        echo sprintf('<a href="%s" class="btn btn-secondary">%s</a>', $button_link, $original_file_name);
+      }
+    }
+  ?>
 
 </div>
 

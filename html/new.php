@@ -69,16 +69,22 @@
       ?>
     </div>
 
-    <!-- Upload multiple files -->
+    <!-- Upload file -->
     <div class="mb-3">
-    <label for="formFileMultiple" class="form-label">Upload file(s)</label>
-    <input class="form-control" type="file" id="formFileMultiple" name="fileToUpload" multiple>
+    <label for="formFileMultiple" class="form-label">Upload file</label>
+    <input class="form-control" type="file" id="formFile" name="fileToUpload">
     </div>
 
     <!-- Submit button -->
     <button type="submit" name="submit" class="btn btn-primary">Add New Product</button>
 
   </form>
+
+  <div class="container" style="margin-top: 50px;">
+    <a href="/home.php" class="btn btn-secondary">Go back home</a>  
+    <?php
+    ?>
+  </div>
   
 
 </div>

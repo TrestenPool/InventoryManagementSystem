@@ -339,6 +339,7 @@
 
   function editProduct($productsArray, $manufacturersArray){
     global $config;
+    $connection = connectToDB($config['db']['db1']);
 
     // redirect to home since the original product was not 
     if(!isset($_SESSION['product'])){
@@ -383,6 +384,62 @@
       redirect('/home.php');
     }
 
+    /********************************************************************/
+    if(isset($_FILES['fileToUpload']) ){
+      // flag to upload file too
+      $flag_upload = true;
+
+      // setting up where we are uploading the file
+      $target_dir = "/var/www/html/files/";
+
+      // get the filename from the user
+      $file_name = $_FILES['fileToUpload']["name"];
+
+      $original_file_name = $file_name;
+
+      // make sure the filename only has one period in it 
+      if( substr_count($file_name, ".") === 0 || substr_count($file_name, ".") > 1 ){
+        writeToError('FAILED UPLOAD:: The file name has to contain only 1 period in the name');
+        return;
+      }
+
+      // adding the unique id to the filename
+      list($file_name, $extension) = explode('.', $_FILES['fileToUpload']['name']);
+
+      // append the id to the filename
+      $unique_id = uniqid();
+      $file_name .=  "_ID_" . $unique_id;
+      $file_name .= "." . $extension;
+
+      // the final target file we will be writing to
+      $target_file = $target_dir . $file_name;
+
+      // only allow the following file types
+      $acceptable_fileTypes = array('jpg', 'png', 'jpeg', 'pdf');
+
+      // gets the image file type from the extension
+      $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
+
+      // Check if file already exists
+      if (file_exists($target_file)) {
+        writeToError('FAILED UPLOAD:: file already exists');
+        $flag_upload = false;
+      }
+
+      // check the file type
+      if(in_array($imageFileType, $acceptable_fileTypes) == false) {
+        writeToError('FAILED UPLOAD:: Only the following formats are allowed (JPG, JPEG, PNG, PDF)');
+        $flag_upload = false;
+      }
+
+      // uploaded file success
+      if (move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $target_file) == false) {
+        writeToError('FAILED UPLOAD:: failed during move_uploaded_file()');
+        $flag_upload = false;
+      } 
+    }
+    /********************************************************************/
+
     // get product id form
     $product_id = Product::convert_productName_to_productId($product, $productsArray);
     // get manufacturer id form
@@ -391,6 +448,24 @@
     // update the product and manufacturer arrays
     $_SESSION['product']->set_products_array($productsArray);
     $_SESSION['product']->set_manufacturers_array($manufacturersArray);
+
+    // attempt to upload the file
+    if($flag_upload == true){
+      $sql_prepared = "INSERT INTO Files(file_name, file_type, file_id, generated_file_name) VALUES(?, ?, ?, ?)";
+      $resultSet = executePreparedStatement($connection, $sql_prepared, array($original_file_name, $extension, $unique_id, $file_name));
+      $file_auto_id = $connection->insert_id;
+      $num_rows_inserted = $resultSet[1]->affected_rows;
+      if($num_rows_inserted != 1){
+        writeToError('FAILED UPLOAD:: There was an issue uploading the file to the database');
+        $flag_upload = false;
+      }
+    }
+
+    // add to product_files pivot table
+    if($flag_upload){
+      $sql_prepared = "INSERT INTO Product_files (product_id, product_auto_id, file_id) VALUES(?, ?, ?)";
+      $resultSet = executePreparedStatement($connection, $sql_prepared, array($product_id, $_SESSION['product']->get_auto_id(), $file_auto_id));
+    }
 
     // update the product in the db
     $_SESSION['product']->update($product_id, $manufacturer_id, $serial_number, $active_flag);
@@ -405,6 +480,7 @@
   */
   function addProduct($products_array, $manufacturers_array){
     global $config;
+    $connection = connectToDB($config['db']['db1']);
 
     // gets the request body
     if( !isset($_POST['productType']) || !isset($_POST['manufacturerName']) || !isset($_POST['serialNumber']) ){
@@ -450,56 +526,101 @@
       redirect('/new.php');
     }
 
+    /***** WRITING DIRECTLY TO THE FILE SYSTEM ****/
     /********************************************************************/
-    $target_dir = "/tmp/website/";
-    $target_file = $target_dir . basename($_FILES["fileToUpload"]["name"]);
-    $uploadOk = 1;
-    $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
+    if(isset($_FILES['fileToUpload']) ){
+      // flag to upload file too
+      $flag_upload = true;
 
-    // Check if file already exists
-    if (file_exists($target_file)) {
-      writeToError('FAILED UPLOAD:: file already exists');
-      $uploadOk = 0;
+      // setting up where we are uploading the file
+      $target_dir = "/var/www/html/files/";
+
+      // get the filename from the user
+      $file_name = $_FILES['fileToUpload']["name"];
+
+      $original_file_name = $file_name;
+
+      // make sure the filename only has one period in it 
+      if( substr_count($file_name, ".") === 0 || substr_count($file_name, ".") > 1 ){
+        writeToError('FAILED UPLOAD:: The file name has to contain only 1 period in the name');
+        return;
+      }
+
+      // adding the unique id to the filename
+      list($file_name, $extension) = explode('.', $_FILES['fileToUpload']['name']);
+
+      // append the id to the filename
+      $unique_id = uniqid();
+      $file_name .=  "_ID_" . $unique_id;
+      $file_name .= "." . $extension;
+
+      // the final target file we will be writing to
+      $target_file = $target_dir . $file_name;
+
+      // only allow the following file types
+      $acceptable_fileTypes = array('jpg', 'png', 'jpeg', 'pdf');
+
+      // gets the image file type from the extension
+      $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
+
+      // Check if file already exists
+      if (file_exists($target_file)) {
+        writeToError('FAILED UPLOAD:: file already exists');
+        $flag_upload = false;
+      }
+
+      // Check file size
+      if ($_FILES["fileToUpload"]["size"] > 500000) {
+        writeToError('FAILED UPLOAD:: file to large');
+        $flag_upload = false;
+      }
+
+      // check the file type
+      if(in_array($imageFileType, $acceptable_fileTypes) == false) {
+        writeToError('FAILED UPLOAD:: Only the following formats are allowed (JPG, JPEG, PNG, PDF)');
+        $flag_upload = false;
+      }
+
+      // uploaded file success
+      if (move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $target_file) == false) {
+        writeToError('FAILED UPLOAD:: failed during move_uploaded_file()');
+        $flag_upload = false;
+      } 
+
     }
 
-    // Check file size
-    if ($_FILES["fileToUpload"]["size"] > 500000) {
-      writeToError('FAILED UPLOAD:: file to large');
-      $uploadOk = 0;
+    // create the product
+    $newProduct = new Product($product_id, $manufacturer_id, $serialNumber, $active_flag);
+    $newProduct->set_products_array($products_array);
+    $newProduct->set_manufacturers_array($manufacturers_array);
+
+    // if there was an issue saving the product in the db
+    if( $newProduct->create() == false){
+      setFlash(FLASH_DANGER, 'There was an issue inserting the product into the database');
+      redirect('/new.php');
     }
 
-    // Allow certain file formats
-    if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg" && $imageFileType != "gif" && $imageFileType != ".pdf" ) {
-      writeToError('FAILED UPLOAD:: Only the following formats are allowed (JPG, JPEG, PNG, GIF, PDF)');
-      $uploadOk = 0;
+    // attempt to upload the file
+    if($flag_upload == true){
+      $sql_prepared = "INSERT INTO Files(file_name, file_type, file_id, generated_file_name) VALUES(?, ?, ?, ?)";
+      $resultSet = executePreparedStatement($connection, $sql_prepared, array($original_file_name, $extension, $unique_id, $file_name));
+      $file_auto_id = $connection->insert_id;
+      $num_rows_inserted = $resultSet[1]->affected_rows;
+      if($num_rows_inserted != 1){
+        writeToError('FAILED UPLOAD:: There was an issue uploading the file to the database');
+        $flag_upload = false;
+      }
     }
 
-    //uploaded file success
-    if (move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $target_file)) {
-      echo "The file ". htmlspecialchars( basename( $_FILES["fileToUpload"]["name"])). " has been uploaded.";
-    } 
-    // error uploading the file
-    else {
-      echo "Sorry, there was an error uploading your file.";
+    // add to product_files pivot table
+    if($flag_upload){
+      $sql_prepared = "INSERT INTO Product_files (product_id, product_auto_id, file_id) VALUES(?, ?, ?)";
+      $resultSet = executePreparedStatement($connection, $sql_prepared, array($product_id, $newProduct->get_auto_id(), $file_auto_id));
     }
-    /********************************************************************/
-    exit;
 
-    // // create the product
-    // $newProduct = new Product($product_id, $manufacturer_id, $serialNumber, $active_flag);
-    // $newProduct->set_products_array($products_array);
-    // $newProduct->set_manufacturers_array($manufacturers_array);
-
-    // // attempt to save in the db
-    // if( $newProduct->create() ){
-    //   // the item was added successfully
-    //   setFlash(FLASH_SUCCESS, 'The product was added into the inventory system successfully');
-    //   redirect('/home.php');
-    // }
-
-    // // there was an issue saving into the db
-    // setFlash(FLASH_DANGER, 'There was an issue inserting the product into the database');
-    // redirect('/new.php');
+    // the item was added successfully
+    setFlash(FLASH_SUCCESS, 'The product was added into the inventory system successfully');
+    redirect('/home.php');
   }
   
 
